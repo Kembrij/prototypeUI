@@ -1,6 +1,9 @@
 package gui;
 
+import externalcode.action.DynamicDataHolder;
+import externalcode.technology.GrowingTechEntry;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.formula.functions.Column;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -11,9 +14,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 
-class DataUtilities {
+public class DataUtilities {
+    public static DynamicDataHolder mydataholder;
+
     static void processButtonOne(File file) {
         int x;
+
 
         try {
             Workbook workbook = new XSSFWorkbook(file);
@@ -48,10 +54,9 @@ class DataUtilities {
                                 .toLocalDate();
 
                         Calendar startLocalDate = new GregorianCalendar.Builder().setDate(sDate.getYear(),
-                                sDate.getMonthValue(),sDate.getDayOfMonth()).build();
+                                sDate.getMonthValue(), sDate.getDayOfMonth()).build();
                         Calendar finishLocalDate = new GregorianCalendar.Builder().setDate(fLocalDate.getYear(),
-                                fLocalDate.getMonthValue(),fLocalDate.getDayOfMonth()).build();
-
+                                fLocalDate.getMonthValue(), fLocalDate.getDayOfMonth()).build();
 
 
                         ap.setStartOfProcedure(startLocalDate);
@@ -311,19 +316,60 @@ class DataUtilities {
     }
 
 
-
-
-
     public static Workbook processExportButton() {
+        List<GrowingTechEntry> list = mydataholder.getFailedOperations();
+        Workbook workbook = new XSSFWorkbook();
 
-            Workbook workbook = new XSSFWorkbook();
-            CreationHelper creationHelper =workbook.getCreationHelper();
-            Sheet sheet = workbook.createSheet("Результаты");
-            Row row = sheet.createRow(0);
-            Cell cell = row.createCell(0);
-            cell.setCellValue("Хелло");
+
+        CreationHelper creationHelper = workbook.getCreationHelper();
+        Sheet sheet = workbook.createSheet("Результаты");
+
+        int i = 0;
+        int y = 0;
+        while (i < 100) {
+            Row row1 = sheet.createRow(i);
+            i++;
+            while (y < 100) {
+                Cell cell = row1.createCell(y);
+                y++;
+            }
+
+            // Cell cell = row.createCell(0);
+            // cell.setCellValue("Хелло");
+            ArrayDeque<String> ad = new ArrayDeque<>();
+            ad.add("Имя культуры");
+            ad.add("Вид работ");
+            ad.add("Начало работ");
+            ad.add("Конец работ");
+            ad.add("Период работ");
+            ad.add("Остаток от площади");
+            ad.add("Срок окончания");
+            ad.add("Дневной рэйт остатка");
+            ad.add("Приоритет");
+
+
+            Iterator<Row> rowiter = sheet.iterator();
+
+            while (rowiter.hasNext()) {
+                Row row2 = rowiter.next();
+
+                if (row2.getRowNum() == 0) {
+                    Iterator<Cell> celliter = row2.cellIterator();
+                    int k = 0;
+                    while (celliter.hasNext() && k < ad.size()) {
+                        Cell cell = celliter.next();
+                        k++;
+                    }
+                }
+
+
+
+            }
+
+        }
         return workbook;
-
     }
+
 }
+
 

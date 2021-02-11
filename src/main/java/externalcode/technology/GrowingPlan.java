@@ -145,7 +145,7 @@ public class GrowingPlan {
                 sb.append(' ');
             }
             sb.append(gt.getActivity());
-            for (int i = 0; i < 50 - gt.getActivity().length(); i++) {
+            for (int i = 0; i < 80 - gt.getActivity().length(); i++) {
                 sb.append(' ');
             }
             sb.append(gt.getStartDate().get(Calendar.DAY_OF_MONTH) +"."+gt.getStartDate().get(Calendar.MONTH) +"."+gt.getStartDate().get(Calendar.YEAR));

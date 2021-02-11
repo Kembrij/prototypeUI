@@ -4,6 +4,7 @@ import externalcode.action.DynamicDataHolder;
 import externalcode.technology.GrowingPlan;
 import externalcode.technology.OutputEntry;
 
+import gui.DataUtilities;
 import gui.ToolBar;
 import gui.ToolBar.*;
 
@@ -13,7 +14,8 @@ import java.util.Map;
 
 public class ExternalCodeStarter {
     public ExternalCodeStarter() {
-/*
+
+
         List<String> list = InputStorage.getStringFields();
         for (String s : list) {
             ToolBar.textListener.textEmmited(s+ '\n');
@@ -29,20 +31,20 @@ public class ExternalCodeStarter {
 
         ToolBar.textListener.textEmmited("" + '\n');
 
-*/
 
-/*
+
+
 
         ToolBar.textListener.textEmmited("totalSquareOfAllFields: " + Property.getTotalSquareOfAllFields() + "\n");
         ToolBar.textListener.textEmmited("totalSquareOfPeasFields: " + Property.getTotalSquareOfPeasFields() + "\n");
         ToolBar.textListener.textEmmited("totalSquareOfSugarBeetFields: " + Property.getTotalSquareOfSugarBeetFields() + "\n");
         ToolBar.textListener.textEmmited("totalSquareOfSpringWheatFields: " + Property.getTotalSquareOfSpringWheatFields() + "\n");
         ToolBar.textListener.textEmmited("totalSquareOfWinterWheatFields: " + Property.getTotalSquareOfWinterWheatFields() + "\n");
-*/
 
 
 
-/*        ToolBar.textListener.textEmmited("Test print for machinery: ");
+
+       ToolBar.textListener.textEmmited("Test print for machinery: ");
         ToolBar.textListener.textEmmited("  " + Property.getAllMachinery());
         ToolBar.textListener.textEmmited("  " + Property.getAllMachinery().size());
         ToolBar.textListener.textEmmited("" + '\n');
@@ -51,12 +53,12 @@ public class ExternalCodeStarter {
         ToolBar.textListener.textEmmited("Test print for equipment:");
         ToolBar.textListener.textEmmited("  " + Property.getAllEquipment());
         ToolBar.textListener.textEmmited("  " + Property.getAllEquipment().size());
-        ToolBar.textListener.textEmmited("" + '\n');*/
+        ToolBar.textListener.textEmmited("" + '\n');
 
 
 
 
-        ToolBar.textListener.textEmmited("Гороховая технология: ");
+       ToolBar.textListener.textEmmited("Гороховая технология: ");
 
         ToolBar.textListener.textEmmited(String.valueOf(GrowingPlan.getPeasPlan().size()));
 
@@ -97,10 +99,12 @@ public class ExternalCodeStarter {
         GrowingPlan.printPlan(dynamicDataHolder.getGlobalQueueGrowingPlan());
         ToolBar.textListener.textEmmited("Текущая очередь работ после создания:");
         GrowingPlan.printPlan(dynamicDataHolder.getCurrentGrowingPlan());
+
         ToolBar.textListener.textEmmited("Продолжительность всех работ составляет, дней: " + dynamicDataHolder.getJobsDuration());
         ToolBar.textListener.textEmmited("Дата начала работ по графику: " + dynamicDataHolder.getStartOperations().getTime());
         ToolBar.textListener.textEmmited("Дата окончания работ по графику: " + dynamicDataHolder.getStopOperations().getTime());
         ToolBar.textListener.textEmmited(""+'\n');
+
 
 
 
@@ -118,7 +122,7 @@ public class ExternalCodeStarter {
         ToolBar.textListener.textEmmited(String.valueOf(GrowingPlan.getActivityTypesSet()));
         ToolBar.textListener.textEmmited(" Количество разных активностей: " + GrowingPlan.getActivityTypesSet().size()+'\n');
 
-        //System.out.println("\nСтандарты обработки по видам активностей:\n");
+
         Map<String, ArrayList<OutputEntry>> testMap = GrowingPlan.getOutputStandardsGroupedByActivity();
 
 
@@ -134,10 +138,13 @@ public class ExternalCodeStarter {
 
         ToolBar.textListener.textEmmited("Незавершенные работы: ");
         ToolBar.textListener.textEmmited(String.valueOf(dynamicDataHolder.getFailedOperations().size())+'\n');
+        DataUtilities.mydataholder = dynamicDataHolder;
         GrowingPlan.printPlan(dynamicDataHolder.getFailedOperations());
+        dynamicDataHolder.giveAdviceOnNewEquipment();
 
 
 
 
     }
+
 }

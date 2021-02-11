@@ -1,10 +1,13 @@
 package externalcode.action;
 
 import externalcode.data.to.operate.Crop;
+import externalcode.data.to.operate.Failure;
+import externalcode.data.to.operate.OutputHelper;
 import externalcode.data.to.operate.Property;
 import externalcode.technology.GrowingPlan;
 import externalcode.technology.GrowingTechEntry;
 import externalcode.technology.OutputEntry;
+import gui.ToolBar;
 
 import java.util.*;
 
@@ -57,11 +60,11 @@ public class DynamicDataHolder {
         while (flag) {
             if (globalQueueGrowingPlan.isEmpty()) {
                 if (!currentGrowingPlan.isEmpty()) {
-                    System.out.println(currentGrowingPlan.size());
+                    //System.out.println(currentGrowingPlan.size());
                     for (GrowingTechEntry toComplete : currentGrowingPlan) {
                         checkForCompletedTasks();
-                        System.out.println(toComplete.getSquareToProcess());
-                        System.out.println("Начало новых работ не запланировано! Завершаем уже начатые!");
+                        ToolBar.textListener.textEmmited(String.valueOf(toComplete.getSquareToProcess()));
+                        ToolBar.textListener.textEmmited("Начало новых работ не запланировано! Завершаем уже начатые!" + '\n');
                         addOneDayToCurrentDay();
                         break;
                     }
@@ -91,14 +94,14 @@ public class DynamicDataHolder {
         machineryToChoose = Property.getAllMachinery();
         equipmentToChoose = Property.getAllEquipment();
         for (GrowingTechEntry growingTechEntry : currentGrowingPlan) {
-            System.out.println(
+            ToolBar.textListener.textEmmited(
                     currentDay.getTime() + " : " +
                     "Площадь под обработку в очереди: " + growingTechEntry.getSquareToProcess() +
                     ".Культура: " + growingTechEntry.getCrop() +
                     ".Вид: " + growingTechEntry.getActivity() +
                     ".Дедлайн: " + growingTechEntry.getEndDate().getTime() +
                     ".Осталось: " + growingTechEntry.getDaysLeft()
-            );
+            + '\n');
             ArrayList<OutputEntry> sortedByActivityOutputStandards =
                     GrowingPlan.getListFromOutputStandardsGroupedByActivity(growingTechEntry.getActivity());
             for (OutputEntry outputEntry : sortedByActivityOutputStandards) {
@@ -108,7 +111,7 @@ public class DynamicDataHolder {
                             growingTechEntry.getSquareToProcess() -
                             (int) (GrowingPlan.getTypeAndShiftDependency().get(growingTechEntry.getActivity()) *
                             outputEntry.getOutput()));
-                    System.out.println(
+                    ToolBar.textListener.textEmmited(
                             currentDay.getTime() + " : " +
                             "Площадь под обработку: " + growingTechEntry.getSquareToProcess() +
                             ".Культура: " + growingTechEntry.getCrop() +
@@ -116,7 +119,7 @@ public class DynamicDataHolder {
                             ".Дедлайн: " + growingTechEntry.getEndDate().getTime() +
                             ".Осталось: " + growingTechEntry.getDaysLeft() + "\n");
                     if (growingTechEntry.getSquareToProcess() <= 0) {
-                        System.out.println("Завершение обработки культуры по данному виду работы!");
+                        ToolBar.textListener.textEmmited("Завершение обработки культуры по данному виду работы!" + '\n');
                         break;
                     }
                 }
@@ -134,11 +137,10 @@ public class DynamicDataHolder {
         LinkedList<GrowingTechEntry> temp = new LinkedList<>(currentGrowingPlan);
         for (int i = 0; i < temp.size(); i++) {
             if (temp.get(i).getDaysLeft() <= 0) {
-                System.out.println(
+                ToolBar.textListener.textEmmited(
                         "Не хватило техники для обработки полей с культурой: " + temp.get(i).getCrop() +
                         ". Отсалось обработать: " + temp.get(i).getSquareToProcess() +
-                        ". Неоконченный вид работы: " + temp.get(i).getActivity()
-                );
+                        ". Неоконченный вид работы: " + temp.get(i).getActivity() + '\n');
                 failedOperations.add(currentGrowingPlan.remove(i));
                 break;
             }
@@ -200,5 +202,84 @@ public class DynamicDataHolder {
 
     public List<GrowingTechEntry> getFailedOperations() {
         return failedOperations;
+    }
+
+
+
+
+    public void giveAdviceOnNewEquipment() {
+        List<Failure> failures = new ArrayList<>();
+        for (GrowingTechEntry entry : failedOperations) {
+            double firstArgForFail = entry.getSquareToProcess();
+            int secondArgForFail = entry.getDuration();
+            double thirdArgForFail = firstArgForFail / secondArgForFail;
+            failures.add(new Failure(
+                    firstArgForFail,
+                    secondArgForFail,
+                    thirdArgForFail,
+                    entry.getCrop(),
+                    entry.getActivity(),
+                    entry.getStartDate(),
+                    entry.getEndDate()
+            ));
+        }
+        for (Failure failure : failures) {
+            OutputEntry min = GrowingPlan.getListFromOutputStandardsGroupedByActivity(failure.getActivity())
+                    .get(GrowingPlan.getListFromOutputStandardsGroupedByActivity(failure.getActivity()).size() - 1);
+            OutputEntry max = GrowingPlan.getListFromOutputStandardsGroupedByActivity(failure.getActivity()).get(0);
+            Double shift = GrowingPlan.getTypeAndShiftDependency().get(failure.getActivity());
+            String conclusion = "Выводы относительно недостающей техники:";
+            ToolBar.textListener.textEmmited(conclusion +'\n');
+            Helper.writeToFile(conclusion, OutputHelper.getDailyLog());
+            Helper.writeToFile(conclusion, OutputHelper.getAdvice());
+            if (min == max) {
+                String firstCase = "Для культуры '" + failure.getCrop() +
+                        "' и вида работы '" + failure.getActivity() +
+                        "' ежедневная невыполненная нагрузка составила '" + failure.getSquarePerDayRemain() + "' гектаров\n" +
+                        "Требуется пополнение парка техники!\n" +
+                        "Потребуется " + (int) (failure.getSquarePerDayRemain() / (min.getOutput() * shift) + 1) +
+                        " пар/а (" + min.getEquipmentName() + " + " +
+                        min.getMachineryName() + ") с производительностью " + min.getOutput() +
+                        " и при количестве " + shift + " смен в сутки\n";
+                ToolBar.textListener.textEmmited(firstCase+'\n');
+                Helper.writeToFile(firstCase, OutputHelper.getDailyLog());
+                Helper.writeToFile(firstCase, OutputHelper.getAdvice());
+            } else {
+                String secondCase = "Для культуры '" + failure.getCrop() +
+                        "' и вида работы '" + failure.getActivity() +
+                        "' ежедневная невыполненная нагрузка составила '" + failure.getSquarePerDayRemain() + "' гектаров\n" +
+                        "Требуется пополнение парка техники!\n" +
+                        "Потребуется " + (int) (failure.getSquarePerDayRemain() / (min.getOutput() * shift) + 1) +
+                        " пар/а (" + min.getMachineryName() + " + " +
+                        min.getEquipmentName() + ") с минимальной производительностью " + min.getOutput() +
+                        " и при количестве " + shift + " смен в сутки" +
+                        "\n\t\t\t\t\t\t\t\t\t\t\tили" +
+                        "\nПотребуется " + (int) (failure.getSquarePerDayRemain() / (max.getOutput() * shift) + 1) +
+                        " пар/а (" + max.getMachineryName() + " + " +
+                        max.getEquipmentName() + ") с максимальной производительностью " + max.getOutput() +
+                        " и при количестве " + shift + " смен в сутки\n";
+                ToolBar.textListener.textEmmited(secondCase);
+                Helper.writeToFile(secondCase, OutputHelper.getDailyLog());
+                Helper.writeToFile(secondCase, OutputHelper.getAdvice());
+            }
+            for (Failure secondForFailure : failures) {
+                if (failure != secondForFailure && (
+                        failure.getStartDate().after(secondForFailure.getStartDate()) &&
+                                failure.getStartDate().before(secondForFailure.getEndDate())
+                ) && (
+                        failure.getEndDate().after(secondForFailure.getStartDate()) &&
+                                failure.getEndDate().after(secondForFailure.getStartDate())
+                ) && (
+                        failure.getActivity().equals(secondForFailure.getActivity())
+                )
+                ) {
+                    String infoCrossing = "Периоды выполнения работ на одинаковой технике пересекаются!\n" +
+                            "Необходимо принять во внимание рекомендации выше и подумать ещё...";
+                    ToolBar.textListener.textEmmited(infoCrossing);
+                    Helper.writeToFile(infoCrossing, OutputHelper.getDailyLog());
+                    Helper.writeToFile(infoCrossing, OutputHelper.getAdvice());
+                }
+            }
+        }
     }
 }

@@ -93,7 +93,7 @@ class MainFrame extends JFrame {
 
         //setSize(1366,768);
 
-        setPreferredSize(new Dimension(1368, 768));
+        setPreferredSize(new Dimension(1600, 900));
         pack();
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
